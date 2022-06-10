@@ -51,6 +51,15 @@ def predict_rub_salary(vacancy: dict) -> float | None:
         return None
 
 
+def get_average_salary(vacancies_salary: list) -> int:
+    salary = 0
+    for vacancy_salary in vacancies_salary:
+        if predict_rub_salary(vacancy_salary):
+            salary += predict_rub_salary(vacancy_salary)
+    return int(salary / len(vacancies_salary))
+
+
+
 def main():
     python_vacancies = get_found_vacancies(
         {
@@ -130,16 +139,43 @@ def main():
     python_vacancies_payments = get_vacancies_payment_range(
         {
             "text": "программист python",
-            "salary": 180000,
-            "curency": "RUR"
+            "salary": 150000,
+            "curency": "RUR",
+            "only_with_salary": "true"
         }
     )
     
+    java_vacancies_payments = get_vacancies_payment_range(
+        {
+            "text": "программист java",
+            "salary": 150000,
+            "curency": "RUR",
+            "only_with_salary": "true"
+        }
+    )
+    
+    vacancies_for_petia = {
+        "python": {
+            "cacancies_found": python_vacancies,
+            "vacancies_processed": len(python_vacancies_payments),
+            "average_salary": get_average_salary(python_vacancies_payments)
+        },
+        "java": {
+            "cacancies_found": java_vacancies,
+            "vacancies_processed": len(java_vacancies_payments),
+            "average_salary": get_average_salary(java_vacancies_payments)
+        }
+    }
+
     print(top_vacancies)
     print("-----------------------------------------------------------------")
     print(python_vacancies_payments)
     print("-----------------------------------------------------------------")
     print(predict_rub_salary(python_vacancies_payments[9]))
+    print("-----------------------------------------------------------------")
+    print(vacancies_for_petia)
+
 
 if __name__ == "__main__":
     main()
+

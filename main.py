@@ -27,13 +27,28 @@ def get_found_vacancies(hh_api_params: dict) -> None:
     return response.json()["found"]
 
 
-def get_payment_range(hh_api_params: dict) -> list:
+def get_vacancies_payment_range(hh_api_params: dict) -> list:
     response = requests.get(HH_API_URL, params=hh_api_params)
     response.raise_for_status()
     vacancies_salary = []
     for item in response.json()["items"]:
          vacancies_salary.append(item["salary"])
     return vacancies_salary
+
+
+def predict_rub_salary(vacancy: dict) -> float | None:
+    if vacancy["currency"] == "RUR":
+        if vacancy["from"] and vacancy["to"]:
+            payment = (vacancy["from"] + vacancy["to"]) / 2
+            return payment
+        elif vacancy["from"]:
+            payment = vacancy["from"] * 1.2
+            return payment
+        elif vacancy["to"]:
+            payment = vacancy["to"] * 0.8
+            return payment
+    else:
+        return None
 
 
 def main():
@@ -112,7 +127,7 @@ def main():
         "C": c_vacancies
     }
     
-    python_vacancies_payment = get_payment_range(
+    python_vacancies_payments = get_vacancies_payment_range(
         {
             "text": "программист python",
             "salary": 180000,
@@ -121,8 +136,10 @@ def main():
     )
     
     print(top_vacancies)
-    print(python_vacancies_payment)
-
+    print("-----------------------------------------------------------------")
+    print(python_vacancies_payments)
+    print("-----------------------------------------------------------------")
+    print(predict_rub_salary(python_vacancies_payments[9]))
 
 if __name__ == "__main__":
     main()

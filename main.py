@@ -28,11 +28,17 @@ def get_found_vacancies(hh_api_params: dict) -> None:
 
 
 def get_vacancies_payment_range(hh_api_params: dict) -> list:
-    response = requests.get(HH_API_URL, params=hh_api_params)
-    response.raise_for_status()
     vacancies_salary = []
-    for item in response.json()["items"]:
-         vacancies_salary.append(item["salary"])
+    page = 0
+    page_number = 1
+    while page < page_number:
+        hh_api_params["page"] = page
+        page_response = requests.get(HH_API_URL, params=hh_api_params)
+        page_response.raise_for_status()
+        for item in page_response.json()["items"]:
+            vacancies_salary.append(item["salary"])
+        page_number = page_response.json()["pages"]
+        page += 1
     return vacancies_salary
 
 
@@ -125,6 +131,7 @@ def main():
         "text": "Программист c#"
         }
     )
+
     top_vacancies = {
         "python": python_vacancies,
         "Java": java_vacancies,
@@ -156,7 +163,7 @@ def main():
     
     vacancies_for_petia = {
         "python": {
-            "cacancies_found": python_vacancies,
+            "vacancies_found": python_vacancies,
             "vacancies_processed": len(python_vacancies_payments),
             "average_salary": get_average_salary(python_vacancies_payments)
         },

@@ -1,6 +1,8 @@
+import os 
 import json
 from typing import Final
 
+from dotenv import load_dotenv
 import requests
 
 
@@ -65,70 +67,97 @@ def get_average_salary(vacancies_salary: list) -> int:
     return int(salary / len(vacancies_salary))
 
 
+def get_vacancies_sj():
+    response = requests.get(
+        url="https://api.superjob.ru/2.0/vacancies",
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={"town": "Москва", "keyword": "программист"}
+
+    )
+    response.raise_for_status()
+    return response.json()["objects"]
+    
+
+def predict_rub_salary_for_sj(vacancy: dict) -> float | None:
+    if vacancy["currency"] == "rub":
+        if vacancy["payment_from"] and vacancy["payment_to"]:
+            payment = (vacancy["payment_from"] + vacancy["payment_to"]) / 2
+            return payment
+        elif vacancy["payment_from"]:
+            payment = vacancy["payment_from"] * 1.2
+            return payment
+        elif vacancy["payment_to"]:
+            payment = vacancy["payment_to"] * 0.8
+            return payment
+    else:
+        return None
+
 
 def main():
-    python_vacancies = get_found_vacancies(
+    load_dotenv()
+
+    """python_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист Python"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист Python"
         }
     )
     javascript_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист javascript"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист javascript"
         }
     )
     ruby_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист ruby"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист ruby"
         }
     )
     java_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист java"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист java"
         }
     )
     php_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист php"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист php"
         }
     )
     cplus_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист c++"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист c++"
         }
     )
     c_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист c"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист c"
         }
     )
     csharp_vacancies = get_found_vacancies(
         {
-        "specialization": 1.221,
-        "area": 1,
-        "period": 30,
-        "text": "Программист c#"
+            "specialization": 1.221,
+            "area": 1,
+            "period": 30,
+            "text": "Программист c#"
         }
     )
 
@@ -181,7 +210,13 @@ def main():
     print(predict_rub_salary(python_vacancies_payments[9]))
     print("-----------------------------------------------------------------")
     print(vacancies_for_petia)
+"""
 
+    vacancies_sj = get_vacancies_sj()
+    for item in vacancies_sj:
+        # print(item)
+        print("-------------------------------------------------------------")
+        print(f'{item["profession"]}, {item["town"]["title"]}, {predict_rub_salary_for_sj(item)}')
 
 if __name__ == "__main__":
     main()

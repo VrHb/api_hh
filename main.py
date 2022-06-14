@@ -1,35 +1,22 @@
 import os 
-import json
 from typing import Final
 
 from dotenv import load_dotenv
+from terminaltables import AsciiTable
 import requests
 
 
 HH_API_URL: Final = "https://api.hh.ru/vacancies"
 SJ_API_URL: Final = "https://api.superjob.ru/2.0/vacancies"
 
-def get_access_token(oauth_data: dict):
-    response = requests.post(
-        url="https://hh.ru/oauth/token",
-        data=oauth_data
-    )
-    return response.json()
 
-
-def get_hh_vacancies_info(hh_api_params: dict) -> None:
-    response = requests.get(HH_API_URL, params=hh_api_params)
-    response.raise_for_status()
-    return response.json()
-
-
-def get_hh_found_vacancies(hh_api_params: dict) -> None:
+def get_vacancies_from_hh(hh_api_params: dict) -> None:
     response = requests.get(HH_API_URL, params=hh_api_params)
     response.raise_for_status()
     return response.json()["found"]
 
 
-def get_hh_vacancies_payment_range(hh_api_params: dict) -> list:
+def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
     vacancies_salary = []
     page = 0
     page_number = 1
@@ -44,7 +31,7 @@ def get_hh_vacancies_payment_range(hh_api_params: dict) -> list:
     return vacancies_salary
 
 
-def predict_rub_salary(vacancy: dict) -> float | None:
+def predict_rub_salary_from_hh(vacancy: dict) -> float | None:
     if vacancy["currency"] == "RUR":
         if vacancy["from"] and vacancy["to"]:
             payment = (vacancy["from"] + vacancy["to"]) / 2
@@ -59,11 +46,11 @@ def predict_rub_salary(vacancy: dict) -> float | None:
         return None
 
 
-def get_average_hh_salary(vacancies_salary: list) -> int:
+def get_average_salary_from_hh(vacancies_salary: list) -> int:
     salary = 0
     for vacancy_salary in vacancies_salary:
-        if predict_rub_salary(vacancy_salary):
-            salary += predict_rub_salary(vacancy_salary)
+        if predict_rub_salary_from_hh(vacancy_salary):
+            salary += predict_rub_salary_from_hh(vacancy_salary)
     return int(salary / len(vacancies_salary))
 
 
@@ -77,17 +64,16 @@ def get_vacancies_from_sj(params: dict, headers: dict) -> list:
             url=SJ_API_URL,
             headers=headers,
             params=params
-
         )
         page_response.raise_for_status()
         for item in page_response.json()["objects"]:
             sj_vacancies_total.append(item)
-        page_number = int(page_response.json()["total"] / 20)
+        page_number = int(page_response.json()["total"] % 20)
         page += 1
     return sj_vacancies_total
  
 
-def get_average_sj_salary(vacancies_salary: list) -> int:
+def get_average_salary_from_sj(vacancies_salary: list) -> int:
     salary = 0
     for vacancy_salary in vacancies_salary:
         if predict_rub_salary_for_sj(vacancy_salary):
@@ -95,7 +81,6 @@ def get_average_sj_salary(vacancies_salary: list) -> int:
     return int(salary / len(vacancies_salary))
 
   
-
 def predict_rub_salary_for_sj(vacancy: dict) -> float | None:
     if vacancy["currency"] == "rub":
         if vacancy["payment_from"] and vacancy["payment_to"]:
@@ -111,137 +96,146 @@ def predict_rub_salary_for_sj(vacancy: dict) -> float | None:
         return None
 
 
+def count_rub_vacancies_from_sj(vacancies: list) -> int:
+    rub_vacancies = []
+    for vacancy in vacancies:
+        if vacancy["currency"] == "rub":
+            rub_vacancies.append(vacancy)
+    return len(rub_vacancies)
+
+
 def main():
     load_dotenv()
 
     """
-    python_vacancies = get_found_vacancies(
+    ##########################################################################
+    HeadHunter block
+    ##########################################################################
+    """
+
+    python_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист Python"
         }
     )
-    javascript_vacancies = get_found_vacancies(
+    javascript_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист javascript"
         }
     )
-    ruby_vacancies = get_found_vacancies(
+    ruby_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист ruby"
         }
     )
-    java_vacancies = get_found_vacancies(
+    java_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист java"
         }
     )
-    php_vacancies = get_found_vacancies(
+    php_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист php"
         }
     )
-    cplus_vacancies = get_found_vacancies(
+    cplus_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист c++"
         }
     )
-    c_vacancies = get_found_vacancies(
+    c_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист c"
         }
     )
-    csharp_vacancies = get_found_vacancies(
+    csharp_vacancies = get_vacancies_from_hh(
         {
             "specialization": 1.221,
             "area": 1,
-            "period": 30,
             "text": "Программист c#"
         }
     )
 
-    top_vacancies = {
-        "python": python_vacancies,
-        "Java": java_vacancies,
-        "Javascript": javascript_vacancies,
-        "PHP": php_vacancies,
-        "C#": csharp_vacancies,
-        "C++": cplus_vacancies,
-        "RUBY": ruby_vacancies,
-        "C": c_vacancies
-    }
-    
-    python_vacancies_payments = get_vacancies_payment_range(
+    python_vacancies_payments = get_vacancies_payment_range_from_hh(
         {
             "text": "программист python",
-            "salary": 150000,
             "curency": "RUR",
             "only_with_salary": "true"
         }
     )
     
-    java_vacancies_payments = get_vacancies_payment_range(
+    java_vacancies_payments = get_vacancies_payment_range_from_hh(
         {
             "text": "программист java",
-            "salary": 150000,
+            "curency": "RUR",
+            "only_with_salary": "true"
+        }
+    )
+   
+    c_vacancies_payments = get_vacancies_payment_range_from_hh(
+        {
+            "text": "программист java",
+            "curency": "RUR",
+            "only_with_salary": "true"
+        }
+    )
+
+    cplus_vacancies_payments = get_vacancies_payment_range_from_hh(
+        {
+            "text": "программист c++",
+            "curency": "RUR",
+            "only_with_salary": "true"
+        }
+    )
+
+    csharp_vacancies_payments = get_vacancies_payment_range_from_hh(
+        {
+            "text": "программист c#",
             "curency": "RUR",
             "only_with_salary": "true"
         }
     )
     
-    vacancies_hh_for_petia = {
-        "python": {
-            "vacancies_found": python_vacancies,
-            "vacancies_processed": len(python_vacancies_payments),
-            "average_salary": get_average_salary(python_vacancies_payments)
-        },
-        "java": {
-            "cacancies_found": java_vacancies,
-            "vacancies_processed": len(java_vacancies_payments),
-            "average_salary": get_average_salary(java_vacancies_payments)
-        }
-    }
-
-    print(top_vacancies)
-    print("-----------------------------------------------------------------")
-    print(python_vacancies_payments)
-    print("-----------------------------------------------------------------")
-    print(predict_rub_salary(python_vacancies_payments[9]))
-    print("-----------------------------------------------------------------")
-    print(vacancies_for_petia)
-"""
-
-    vacancies_sj_moskow = get_vacancies_from_sj(
-        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
-        params={
-            "town": "Москва",
-            "keyword": "программист"
+    php_vacancies_payments = get_vacancies_payment_range_from_hh(
+        {
+            "text": "программист php",
+            "curency": "RUR",
+            "only_with_salary": "true"
         }
     )
-    for item in vacancies_sj_moskow:
-        print("-------------------------------------------------------------")
-        print(f'{item["profession"]}, {item["town"]["title"]}, {predict_rub_salary_for_sj(item)}')
-
+    ruby_vacancies_payments = get_vacancies_payment_range_from_hh(
+        {
+            "text": "программист ruby",
+            "curency": "RUR",
+            "only_with_salary": "true"
+        }
+    )
+    js_vacancies_payments = get_vacancies_payment_range_from_hh(
+        {
+            "text": "программист java script",
+            "curency": "RUR",
+            "only_with_salary": "true"
+        }
+    )
+    """
+    ##########################################################################
+    SuperJob block
+    ##########################################################################
+    """
 
     vacancies_sj_python = get_vacancies_from_sj(
         headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
@@ -255,31 +249,82 @@ def main():
             "keyword": "программист java",
         }
     )   
-    
-
-    print("-------------------------------------------------------------")
-    vacancies_sj_for_petia = {
-        "Python": {
-            "vacancies_found": len(vacancies_sj_python),
-            "vacancies_processed": len(vacancies_sj_python),
-            "average_salary": get_average_sj_salary(vacancies_sj_python)
-        },
-        "Java": {
-            "vacancies_found": len(vacancies_sj_java),
-            "vacancies_processed": len(vacancies_sj_java),
-            "average_salary": get_average_sj_salary(vacancies_sj_java)
+    vacancies_sj_c = get_vacancies_from_sj(
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={
+            "keyword": "программист c",
         }
-    }
-    print(vacancies_sj_for_petia)
-    print("-------------------------------------------------------------")
+    )
+    vacancies_sj_csharp = get_vacancies_from_sj(
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={
+            "keyword": "программист c#",
+        }
+    )
+    vacancies_sj_cplus = get_vacancies_from_sj(
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={
+            "keyword": "программист c++",
+        }
+    )
+    vacancies_sj_ruby = get_vacancies_from_sj(
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={
+            "keyword": "программист ruby",
+        }
+    )
+    vacancies_sj_js = get_vacancies_from_sj(
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={
+            "keyword": "программист java script",
+        }
+    )
+    vacancies_sj_php = get_vacancies_from_sj(
+        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
+        params={
+            "keyword": "программист php",
+        }
+    )
 
-"""
-Нужно:
-1. Убрать, объединить лишние функции
-2. Разобраться с обработанными вакансиями, это выходит те, что оплачиваются в
-рублях
-3. Сделать вывод красивый
-"""
+    title_sj_table = "SuperJob Moskow"
+    sj_table_data = [
+        ["Язык програмирования", "Вакансий найдено", "Вакансий обработано"],
+        ["python", len(vacancies_sj_python), count_rub_vacancies_from_sj(vacancies_sj_python)],
+        ["c", len(vacancies_sj_c), count_rub_vacancies_from_sj(vacancies_sj_c)],
+        ["c#", len(vacancies_sj_csharp), count_rub_vacancies_from_sj(vacancies_sj_csharp)],
+
+        ["c++", len(vacancies_sj_cplus), count_rub_vacancies_from_sj(vacancies_sj_cplus)],
+
+        ["java", len(vacancies_sj_java), count_rub_vacancies_from_sj(vacancies_sj_java)],
+        ["java script", len(vacancies_sj_js), count_rub_vacancies_from_sj(vacancies_sj_js)],
+
+        ["ruby", len(vacancies_sj_ruby), count_rub_vacancies_from_sj(vacancies_sj_ruby)],
+
+        ["php", len(vacancies_sj_php), count_rub_vacancies_from_sj(vacancies_sj_php)],
+
+        ]
+    sj_table = AsciiTable(sj_table_data, title_sj_table)
+    print(sj_table.table)
+
+    title_hh_table = "HeadHunter Moskow"
+    hh_table_data = [
+        ["Язык програмирования", "Вакансий найдено", "Вакансий обработано"],
+        ["python", python_vacancies, len(python_vacancies_payments)],
+        ["c", c_vacancies, len(c_vacancies_payments)],
+        ["c#", csharp_vacancies, len(csharp_vacancies_payments)],
+
+        ["c++", cplus_vacancies, len(cplus_vacancies_payments)],
+
+        ["java", java_vacancies, len(java_vacancies_payments)],
+        ["java script", javascript_vacancies, len(js_vacancies_payments)],
+
+        ["ruby", ruby_vacancies, len(ruby_vacancies_payments)],
+
+        ["php", php_vacancies, len(php_vacancies_payments)],
+    ]
+    hh_table = AsciiTable(hh_table_data, title_hh_table)
+    print(hh_table.table)
+
 
 if __name__ == "__main__":
     main()

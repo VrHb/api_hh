@@ -287,7 +287,7 @@ def main():
 
     title_sj_table = "SuperJob Moskow"
     sj_table_data = [
-        ["Язык програмирования", "Вакансий найдено", "Вакансий обработано"],
+        ["Язык программирования", "Вакансий найдено", "Вакансий обработано"],
         ["python", len(vacancies_sj_python), count_rub_vacancies_from_sj(vacancies_sj_python)],
         ["c", len(vacancies_sj_c), count_rub_vacancies_from_sj(vacancies_sj_c)],
         ["c#", len(vacancies_sj_csharp), count_rub_vacancies_from_sj(vacancies_sj_csharp)],
@@ -302,7 +302,7 @@ def main():
 
     title_hh_table = "HeadHunter Moskow"
     hh_table_data = [
-        ["Язык програмирования", "Вакансий найдено", "Вакансий обработано"],
+        ["Язык программирования", "Вакансий найдено", "Вакансий обработано"],
         ["python", python_vacancies, len(python_vacancies_payments)],
         ["c", c_vacancies, len(c_vacancies_payments)],
         ["c#", csharp_vacancies, len(csharp_vacancies_payments)],

@@ -291,14 +291,11 @@ def main():
         ["python", len(vacancies_sj_python), count_rub_vacancies_from_sj(vacancies_sj_python)],
         ["c", len(vacancies_sj_c), count_rub_vacancies_from_sj(vacancies_sj_c)],
         ["c#", len(vacancies_sj_csharp), count_rub_vacancies_from_sj(vacancies_sj_csharp)],
-
         ["c++", len(vacancies_sj_cplus), count_rub_vacancies_from_sj(vacancies_sj_cplus)],
 
         ["java", len(vacancies_sj_java), count_rub_vacancies_from_sj(vacancies_sj_java)],
         ["java script", len(vacancies_sj_js), count_rub_vacancies_from_sj(vacancies_sj_js)],
-
         ["ruby", len(vacancies_sj_ruby), count_rub_vacancies_from_sj(vacancies_sj_ruby)],
-
         ["php", len(vacancies_sj_php), count_rub_vacancies_from_sj(vacancies_sj_php)],
     ]
     sj_table = AsciiTable(sj_table_data, title_sj_table)

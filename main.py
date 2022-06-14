@@ -1,10 +1,9 @@
-import os 
+import os
 from typing import Final
 
+import requests
 from dotenv import load_dotenv
 from terminaltables import AsciiTable
-import requests
-
 
 HH_API_URL: Final = "https://api.hh.ru/vacancies"
 SJ_API_URL: Final = "https://api.superjob.ru/2.0/vacancies"

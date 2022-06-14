@@ -300,8 +300,7 @@ def main():
         ["ruby", len(vacancies_sj_ruby), count_rub_vacancies_from_sj(vacancies_sj_ruby)],
 
         ["php", len(vacancies_sj_php), count_rub_vacancies_from_sj(vacancies_sj_php)],
-
-        ]
+    ]
     sj_table = AsciiTable(sj_table_data, title_sj_table)
     print(sj_table.table)
 
@@ -311,14 +310,10 @@ def main():
         ["python", python_vacancies, len(python_vacancies_payments)],
         ["c", c_vacancies, len(c_vacancies_payments)],
         ["c#", csharp_vacancies, len(csharp_vacancies_payments)],
-
         ["c++", cplus_vacancies, len(cplus_vacancies_payments)],
-
         ["java", java_vacancies, len(java_vacancies_payments)],
         ["java script", javascript_vacancies, len(js_vacancies_payments)],
-
         ["ruby", ruby_vacancies, len(ruby_vacancies_payments)],
-
         ["php", php_vacancies, len(php_vacancies_payments)],
     ]
     hh_table = AsciiTable(hh_table_data, title_hh_table)

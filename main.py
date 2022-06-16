@@ -5,14 +5,9 @@ import requests
 from dotenv import load_dotenv
 from terminaltables import AsciiTable
 
-HH_API_URL: Final = "https://api.hh.ru/vacancies"
 SJ_API_URL: Final = "https://api.superjob.ru/2.0/vacancies"
 
 
-def get_vacancies_from_hh(hh_api_params: dict) -> None:
-    response = requests.get(HH_API_URL, params=hh_api_params)
-    response.raise_for_status()
-    return response.json()["found"]
 
 
 def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
@@ -21,7 +16,7 @@ def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
     page_number = 1
     while page < page_number:
         hh_api_params["page"] = page
-        page_response = requests.get(HH_API_URL, params=hh_api_params)
+        page_response = requests.get("https://api.hh.ru/vacancies", params=hh_api_params)
         page_response.raise_for_status()
         for item in page_response.json()["items"]:
             vacancies_salary.append(item["salary"])
@@ -60,7 +55,7 @@ def get_vacancies_from_sj(params: dict, headers: dict) -> list:
     while page < page_number:
         params["page"] = page
         page_response = requests.get(
-            url=SJ_API_URL,
+            url="https://api.superjob.ru/2.0/vacancies",
             headers=headers,
             params=params
         )
@@ -112,8 +107,9 @@ def main():
     ##########################################################################
     """
 
-    python_vacancies = get_vacancies_from_hh(
-        {
+    python_vacancies = requests.get(
+        url="https://api.hh.ru/vacancies",
+        params={
             "specialization": 1.221,
             "area": 1,
             "text": "Программист Python"

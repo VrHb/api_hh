@@ -25,16 +25,20 @@ def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
     return vacancies_salary
 
 
-def predict_rub_salary_from_hh(vacancy: dict) -> float | None:
-    if vacancy["currency"] == "RUR":
-        if vacancy["from"] and vacancy["to"]:
-            payment = (vacancy["from"] + vacancy["to"]) / 2
+def predict_rub_salary(
+    vacancy_currency: str,
+    vacancy_payment_from: float, 
+    vacancy_payment_to: float
+    ) -> float | None:
+    if vacancy_currency == "RUR":
+        if vacancy_payment_from and vacancy_payment_to:
+            payment = (vacancy_payment_from + vacancy_payment_to) / 2
             return payment
-        elif vacancy["from"]:
-            payment = vacancy["from"] * 1.2
+        elif vacancy_payment_from:
+            payment = vacancy_payment_from * 1.2
             return payment
-        elif vacancy["to"]:
-            payment = vacancy["to"] * 0.8
+        elif vacancy_payment_to:
+            payment = vacancy_payment_to * 0.8
             return payment
     return None
 

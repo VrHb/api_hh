@@ -1,3 +1,0 @@
-python-dotenv==0.20.0
-requests==2.28.0
-terminaltables==3.1.10

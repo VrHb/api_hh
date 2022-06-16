@@ -1,13 +1,17 @@
 import os
-from typing import Final
+from dataclasses import dataclass
 
 import requests
 from dotenv import load_dotenv
 from terminaltables import AsciiTable
 
-SJ_API_URL: Final = "https://api.superjob.ru/2.0/vacancies"
 
 
+@dataclass
+class Vacancy:
+    currency: str
+    payment_to: float
+    payment_from: float
 
 
 def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
@@ -25,20 +29,16 @@ def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
     return vacancies_salary
 
 
-def predict_rub_salary(
-    vacancy_currency: str,
-    vacancy_payment_from: float, 
-    vacancy_payment_to: float
-    ) -> float | None:
-    if vacancy_currency == "RUR":
-        if vacancy_payment_from and vacancy_payment_to:
-            payment = (vacancy_payment_from + vacancy_payment_to) / 2
+def predict_rub_salary(vacancy: Vacancy) -> float | None:
+    if vacancy.currency == "RUR":
+        if vacancy.payment_from and vacancy.payment_to:
+            payment = (vacancy.payment_from + vacancy.payment_to) / 2
             return payment
-        elif vacancy_payment_from:
-            payment = vacancy_payment_from * 1.2
+        elif vacancy.payment_from:
+            payment = vacancy.payment_from * 1.2
             return payment
-        elif vacancy_payment_to:
-            payment = vacancy_payment_to * 0.8
+        elif vacancy.payment_to:
+            payment = vacancy.payment_to * 0.8
             return payment
     return None
 

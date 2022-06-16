@@ -36,8 +36,7 @@ def predict_rub_salary_from_hh(vacancy: dict) -> float | None:
         elif vacancy["to"]:
             payment = vacancy["to"] * 0.8
             return payment
-    else:
-        return None
+    return None
 
 
 def get_average_salary_from_hh(vacancies_salary: list) -> int:
@@ -86,8 +85,7 @@ def predict_rub_salary_for_sj(vacancy: dict) -> float | None:
         elif vacancy["payment_to"]:
             payment = vacancy["payment_to"] * 0.8
             return payment
-    else:
-        return None
+    return None
 
 
 def count_rub_vacancies_from_sj(vacancies: list) -> int:

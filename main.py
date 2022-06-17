@@ -67,25 +67,6 @@ def get_average_salary_from_hh(vacancies_salary: list) -> int:
     return int(salary / len(vacancies_salary))
 
 
-def get_vacancies_from_sj(params: dict, headers: dict) -> list:
-    sj_vacancies_total = []
-    page = 0
-    page_number = 1
-    while page < page_number:
-        params["page"] = page
-        page_response = requests.get(
-            url="https://api.superjob.ru/2.0/vacancies",
-            headers=headers,
-            params=params
-        )
-        page_response.raise_for_status()
-        for item in page_response.json()["objects"]:
-            sj_vacancies_total.append(item)
-        page_number = int(page_response.json()["total"] % 20)
-        page += 1
-    return sj_vacancies_total
- 
-
 def get_average_salary_from_sj(vacancies_salary: list) -> int:
     salary = 0
     for vacancy_salary in vacancies_salary:
@@ -118,6 +99,7 @@ def main():
     ##########################################################################
     """
     hh_sum_vacancies = []
+    hh_rub_vacancies = []
     for language in Programming_languages:
         response = requests.get(
             url="https://api.hh.ru/vacancies",
@@ -128,10 +110,6 @@ def main():
             }
         )
         hh_sum_vacancies.append(response.json()["found"])
-
-
-    hh_rub_vacancies = []
-    for language in Programming_languages:
         vacancies_payment_range = get_vacancies_payment_range_from_hh({
             "specialization": 1.221,
             "area": 1,
@@ -162,6 +140,7 @@ def main():
     ##########################################################################
     """
     sj_sum_vacancies = []
+    sj_rub_vacancies = []
     for language in Programming_languages:
         response = requests.get(
             url="https://api.superjob.ru/2.0/vacancies",
@@ -172,27 +151,15 @@ def main():
             }
         )
         sj_sum_vacancies.append(response.json()["total"])
-
-
-    sj_rub_vacancies = []
-    for language in Programming_languages:
-        vacancies_payment_range = requests.get(
-            url="https://api.superjob.ru/2.0/vacancies",
-            headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
-            params={
-                "town": 4,
-                "keyword": f"Программист {language.value}"
-            }
-        )
         sj_rub_vacancies_payments = []
-        for vacancy_payment_range in vacancies_payment_range.json()["objects"]:
+        for vacancy_payment in response.json()["objects"]:
             vacancy = Vacancy(
-            vacancy_payment_range["payment_from"],
-            vacancy_payment_range["payment_to"],
-            vacancy_payment_range["currency"]
+            vacancy_payment["payment_from"],
+            vacancy_payment["payment_to"],
+            vacancy_payment["currency"]
             )
             if predict_rub_salary(vacancy):
-                sj_rub_vacancies_payments.append(vacancy_payment_range)
+                sj_rub_vacancies_payments.append(vacancy_payment)
         sj_rub_vacancies.append(len(sj_rub_vacancies_payments))
 
 

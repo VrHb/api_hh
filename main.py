@@ -25,6 +25,7 @@ class Programming_languages(str, Enum):
     RUBY = "ruby"
     C = "c"
 
+
 def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
     vacancies_salary = []
     page = 0
@@ -88,32 +89,10 @@ def get_vacancies_from_sj(params: dict, headers: dict) -> list:
 def get_average_salary_from_sj(vacancies_salary: list) -> int:
     salary = 0
     for vacancy_salary in vacancies_salary:
-        if predict_rub_salary_for_sj(vacancy_salary):
-            salary += predict_rub_salary_for_sj(vacancy_salary)
+        if predict_rub_salary(vacancy_salary):
+            salary += predict_rub_salary(vacancy_salary)
     return int(salary / len(vacancies_salary))
-
   
-def predict_rub_salary_for_sj(vacancy: dict) -> float | None:
-    if vacancy["currency"] == "rub":
-        if vacancy["payment_from"] and vacancy["payment_to"]:
-            payment = (vacancy["payment_from"] + vacancy["payment_to"]) / 2
-            return payment
-        elif vacancy["payment_from"]:
-            payment = vacancy["payment_from"] * 1.2
-            return payment
-        elif vacancy["payment_to"]:
-            payment = vacancy["payment_to"] * 0.8
-            return payment
-    return None
-
-
-def count_rub_vacancies_from_sj(vacancies: list) -> int:
-    rub_vacancies = []
-    for vacancy in vacancies:
-        if vacancy["currency"] == "rub":
-            rub_vacancies.append(vacancy)
-    return len(rub_vacancies)
-    
 
 def create_table_output(
     table_name: str, 
@@ -149,7 +128,8 @@ def main():
             }
         )
         hh_sum_vacancies.append(response.json()["found"])
-    
+
+
     hh_rub_vacancies = []
     for language in Programming_languages:
         vacancies_payment_range = get_vacancies_payment_range_from_hh({
@@ -159,10 +139,12 @@ def main():
         })
         hh_rub_vacancies_payments = []
         for vacancy_payment_range in vacancies_payment_range:
-            Vacancy.currency = vacancy_payment_range["currency"]
-            Vacancy.payment_to = vacancy_payment_range["to"]
-            Vacancy.payment_from = vacancy_payment_range["from"]
-            if predict_rub_salary(Vacancy):
+            vacancy = Vacancy(
+            vacancy_payment_range["from"],
+            vacancy_payment_range["to"],
+            vacancy_payment_range["currency"]
+            )
+            if predict_rub_salary(vacancy):
                 hh_rub_vacancies_payments.append(vacancy_payment_range)
         hh_rub_vacancies.append(len(hh_rub_vacancies_payments))
                     
@@ -179,7 +161,6 @@ def main():
     SuperJob block
     ##########################################################################
     """
-
     sj_sum_vacancies = []
     for language in Programming_languages:
         response = requests.get(
@@ -195,36 +176,33 @@ def main():
 
     sj_rub_vacancies = []
     for language in Programming_languages:
-        vacancies_payment_range = get_vacancies_from_sj(
+        vacancies_payment_range = requests.get(
+            url="https://api.superjob.ru/2.0/vacancies",
             headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
             params={
                 "town": 4,
-                "text": f"Программист {language.value}"
+                "keyword": f"Программист {language.value}"
             }
         )
         sj_rub_vacancies_payments = []
-        for vacancy_payment_range in vacancies_payment_range:
-            Vacancy.currency = vacancy_payment_range["currency"]
-            Vacancy.payment_to = vacancy_payment_range["payment_to"]
-            Vacancy.payment_from = vacancy_payment_range["payment_from"]
-            if predict_rub_salary(Vacancy):
+        for vacancy_payment_range in vacancies_payment_range.json()["objects"]:
+            vacancy = Vacancy(
+            vacancy_payment_range["payment_from"],
+            vacancy_payment_range["payment_to"],
+            vacancy_payment_range["currency"]
+            )
+            if predict_rub_salary(vacancy):
                 sj_rub_vacancies_payments.append(vacancy_payment_range)
         sj_rub_vacancies.append(len(sj_rub_vacancies_payments))
-   
+
+
     sj_table = create_table_output(
         "SuperJob Moskow", 
         sj_sum_vacancies, 
         sj_rub_vacancies
         ) 
 
-    vacancies_payment_range = get_vacancies_from_sj(
-        headers={"X-Api-App-Id": os.getenv("SJ_API_KEY")},
-        params={
-            "town": 4,
-            "text": f"Программист {Programming_languages.PYTHON.value}"
-        }
-    )
-    print(vacancies_payment_range)    
+
     print(hh_table)
     print(sj_table)
 

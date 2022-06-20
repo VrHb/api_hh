@@ -46,17 +46,17 @@ def get_vacancies_payment_range_from_hh(hh_api_params: dict) -> list:
 
 
 def predict_rub_salary(vacancy: Vacancy) -> float | None:
-    if vacancy.currency == "RUR" or vacancy.currency == "rub":
-        if vacancy.payment_from and vacancy.payment_to:
-            payment = (vacancy.payment_from + vacancy.payment_to) / 2
-            return payment
-        elif vacancy.payment_from:
-            payment = vacancy.payment_from * 1.2
-            return payment
-        elif vacancy.payment_to:
-            payment = vacancy.payment_to * 0.8
-            return payment
-    return None
+    if vacancy.currency not in ("RUR", "rub"):
+        return None
+    if vacancy.payment_from and vacancy.payment_to:
+        payment = (vacancy.payment_from + vacancy.payment_to) / 2
+        return payment
+    elif vacancy.payment_from:
+        payment = vacancy.payment_from * 1.2
+        return payment
+    elif vacancy.payment_to:
+        payment = vacancy.payment_to * 0.8
+        return payment
 
 
 def get_average_salary_from_hh(vacancies_salary: list) -> int:
@@ -154,9 +154,9 @@ def main():
         sj_rub_vacancies_payments = []
         for vacancy_payment in response.json()["objects"]:
             vacancy = Vacancy(
-            vacancy_payment["payment_from"],
-            vacancy_payment["payment_to"],
-            vacancy_payment["currency"]
+                vacancy_payment["payment_from"],
+                vacancy_payment["payment_to"],
+                vacancy_payment["currency"]
             )
             if predict_rub_salary(vacancy):
                 sj_rub_vacancies_payments.append(vacancy_payment)
